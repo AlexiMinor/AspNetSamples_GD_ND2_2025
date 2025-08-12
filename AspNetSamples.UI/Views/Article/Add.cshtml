@@ -1,0 +1,25 @@
+﻿@model CreateArticleModel
+@{
+    ViewData["Title"] = "Add article";
+}
+
+<h2>Add Article</h2>
+
+<form asp-action="AddProcessing" asp-controller="Article" method="post">
+    <div>
+        <span>Title</span>
+        <input asp-for="Title" type="text"/>
+    </div>
+    
+    <div>
+        <span>Description</span>
+        <input asp-for="Description" type="text"/>
+    </div>
+    
+    <div>
+        <span>Text</span>
+        <input asp-for="Text" type="text"/>
+    </div>
+    
+    <button>Submit</button>
+</form>

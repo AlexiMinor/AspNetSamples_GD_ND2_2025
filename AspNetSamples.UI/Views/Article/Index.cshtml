@@ -1,0 +1,32 @@
+﻿@using AspNetSamples.Core.Dto
+@using AspNetSamples.Database
+@using AspNetSamples.Services.Abstractions
+@model ArticlesCollectionWithPaginationModel
+@{
+    ViewData["Title"] = "Articles";
+    // Layout = null; 
+    @inject IArticleService ArticleService;
+}
+
+<h2>Articles</h2>
+<a asp-action="Add" asp-controller="Article">Add new</a>
+
+@if (Model.Articles.Any())
+{
+    foreach (var articleDto in Model.Articles)
+    {
+        @* await Html.RenderPartialAsync("ArticlePreview", articleDto); *@
+        <div>
+            <partial name="ArticlePreview" model="articleDto"/>
+        </div>
+    }
+    <div class="pagination" 
+         paging-info="@Model.PagingInfo"
+         page-class-enabled="true"
+         page-class="btn"
+         page-class-selected="btn btn-primary"
+         action="Index">
+    </div>
+
+    @* var data = await ArticleService.GetArticlesByPageAsync(); *@
+}

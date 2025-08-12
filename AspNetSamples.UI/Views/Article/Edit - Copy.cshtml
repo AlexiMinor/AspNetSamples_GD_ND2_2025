@@ -1,0 +1,35 @@
+﻿@model EditArticleModel
+
+@{
+    ViewData["Title"] = "Add article";
+}
+
+<h2>Edit Article</h2>
+
+<form asp-action="EditProcessing" asp-controller="Article" method="post">
+
+    <input asp-for="Id" type="hidden" />
+
+    <div>
+        <label asp-for="Title">Title</label>
+        <input asp-for="Title" type="text" class="form-control" />
+    </div>
+
+    <div>
+        <label asp-for="Description">Description</label>
+        <input asp-for="Description" type="text" class="form-control" />
+    </div>
+
+    <div>
+        <label asp-for="Text">Text</label>
+        <textarea asp-for="Text" type="text" class="form-control"></textarea>
+    </div>
+
+    <div>
+        <label asp-for="SourceId">Source Id</label>
+        <input asp-for="SourceId" type="text" class="form-control" />
+    </div>
+    <div>
+        <input type="submit" class="btn btn-primary" value="Submit" />
+    </div>
+</form>
