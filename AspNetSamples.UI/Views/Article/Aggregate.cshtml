@@ -1,0 +1,10 @@
+﻿<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Starting aggregation</h5>
+        <p class="card-text">Article aggregation can take some time. Are you sure? </p>
+        <form asp-action="AggregateProcessing" asp-controller="Article" method="post">
+            <button type="submit" class="btn btn-primary">Yes, aggregate</button>
+            <a asp-action="Index" asp-controller="Article" class="btn btn-secondary">No, go back</a>
+        </form>
+    </div>
+</div>

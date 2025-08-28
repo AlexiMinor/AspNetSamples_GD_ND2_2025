@@ -1,9 +1,10 @@
-﻿using AspNetSamples.Core.Dto;
-using AspNetSamples.Database.Entities;
+﻿using System.Collections.Concurrent;
+using AspNetSamples.Core.Dto;
+using AspNetSamples.Mappers;
+using AspNetSamples.Models;
 using AspNetSamples.Services.Abstractions;
 using AspNetSamples.UI.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace AspNetSamples.UI.Controllers
 {
@@ -11,47 +12,149 @@ namespace AspNetSamples.UI.Controllers
     {
         private readonly IArticleService _articleService;
         private readonly ISourceService _sourceService;
+        private readonly IRssService _rssService;
+        private readonly ArticleMapper _articleMapper;
+        private readonly ILogger<ArticleController> _logger;
 
-        public ArticleController(IArticleService articleService, ISourceService sourceService)
+        public ArticleController(IArticleService articleService,
+            ISourceService sourceService,
+            ArticleMapper articleMapper,
+            IRssService rssService, ILogger<ArticleController> logger)
         {
             _articleService = articleService;
             _sourceService = sourceService;
+            _articleMapper = articleMapper;
+            _rssService = rssService;
+            _logger = logger;
         }
-
-        //[Route("{controller}/{action}/{pageSize=15}")]
 
 
         [HttpGet]
-        //[Route("/article-list/{pageSize=15}")]
-        public async Task<IActionResult> Index(int currentPage=1, int pageSize=3)
+        public async Task<IActionResult> Index(int currentPage = 1, int pageSize = 15)
         {
-            var articles = await _articleService.GetArticlesByPageAsync(currentPage, pageSize, HttpContext.RequestAborted);
-            var count = await _articleService.TotalCountAsync(HttpContext.RequestAborted);
-            var model = new ArticlesCollectionWithPaginationModel()
+            try
             {
-                Articles = articles,
-                PagingInfo = new PagingInfoModel()
+                var articles = await _articleService.GetArticlesByPageAsync(currentPage, pageSize, HttpContext.RequestAborted);
+                _logger.LogDebug("Articles read from db");
+                var count = await _articleService.TotalCountAsync(HttpContext.RequestAborted);
+                _logger.LogDebug("Articles counts from db");
+                var model = new ArticlesCollectionWithPaginationModel()
                 {
-                    CurrentPage = currentPage,
-                    PageSize = pageSize,
-                    TotalItems = count
-                }
-            };
-            return View(model);
+                    Articles = articles,
+                    PagingInfo = new PagingInfoModel()
+                    {
+                        CurrentPage = currentPage,
+                        PageSize = pageSize,
+                        TotalItems = count
+                    }
+                };
+                _logger.LogDebug("Models created");
+                return View(model);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error in Index action");
+                throw;
+            }
+          
         }
 
         [HttpGet]
-        public IActionResult Add()
+        public async Task<IActionResult> Add()
+        {
+            try
+            {
+                var model = new CreateArticleModel()
+                {
+                    Sources = (await _sourceService.GetAllSourcesAsync())
+                        .Select(s => new SourceModel()
+                        {
+                            Id = s.Id,
+                            Name = s.Name
+                        }).ToList()
+                };
+                return View(model);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error in Add action");
+                throw;
+            }
+            
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> Aggregate()
         {
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddProcessing([FromForm]CreateArticleModel model)
+        public async Task<IActionResult> AggregateProcessing()
         {
-            var _articleService = HttpContext.RequestServices.GetRequiredService<IArticleService>();
+            try
+            {
+                _logger.LogInformation("Aggregation started");
+                var sourcesToAggregate = await _sourceService.GetAllSourcesWithRssAsync(HttpContext.RequestAborted);
+                _logger.LogDebug($"Sources to aggregate: {sourcesToAggregate.Count}");
+
+                if (!sourcesToAggregate.Any())
+                {
+                    _logger.LogWarning("No sources with RSS found for aggregation");
+                    return RedirectToAction("Index");
+                }
+                var aggregatedArticles = new ConcurrentBag<ArticleDto>();
+                await Parallel.ForEachAsync(sourcesToAggregate, HttpContext.RequestAborted,
+                    async (source, token) =>
+                    {
+                        var articles = await _rssService.GetRssFeedBySourceAsync(source, token);
+                        if (articles != null && articles.Any())
+                        {
+                            foreach (var article in articles)
+                            {
+                                aggregatedArticles.Add(article);
+                            }
+                        }
+                    });
+                _logger.LogDebug($"Aggregated articles count: {aggregatedArticles.Count}");
+                await _articleService.AddArticlesAsync(aggregatedArticles, HttpContext.RequestAborted);
+                _logger.LogInformation("Aggregated articles added to database");
+                _logger.LogInformation("Starting web scrapping for articles");
+                await _articleService.AggregateArticleTextAsync(HttpContext.RequestAborted);
+                _logger.LogInformation("Web scrapping completed");
+
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during aggregation process");
+                return StatusCode(500, new {ErrorMessage = ex.Message});
+            }
+            
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> AddProcessing([FromForm] CreateArticleModel model)
+        {
+
+            if (ModelState.IsValid == false)
+            {
+                model.Sources = (await _sourceService.GetAllSourcesAsync())
+                    .Select(s => new SourceModel()
+                    {
+                        Id = s.Id,
+                        Name = s.Name
+                    }).ToList();
+                return View("Add", model);
+            }
+
+            //var _articleService = HttpContext.RequestServices.GetRequiredService<IArticleService>();
+
             //add cancellation token from controller context
-            await _articleService.AddArticleAsync(ConvertCreateArticleModelToArticle(model), HttpContext.RequestAborted);
+            await _articleService.AddArticleAsync(_articleMapper.MapCreateArticleModelToArticleDto(model),
+                HttpContext.RequestAborted);
 
             return RedirectToAction("Index");
         }
@@ -66,7 +169,7 @@ namespace AspNetSamples.UI.Controllers
                 return NotFound();
             }
 
-        
+
 
             return PartialView("ArticlePreview", article);
         }
@@ -83,7 +186,7 @@ namespace AspNetSamples.UI.Controllers
 
             return NotFound();
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> Edit(Guid id)
         {
@@ -93,15 +196,11 @@ namespace AspNetSamples.UI.Controllers
             {
                 return NotFound();
             }
-            var sources = await _sourceService.GetAllAsync(cToken);
+            var sources = await _sourceService.GetAllSourcesAsync(cToken);
 
-            var model = new EditArticleModel()
+            var model = new EditArticleViewModel()
             {
-                Id = articleForEdit.Id,
-                Title = articleForEdit.Title,
-                Description = articleForEdit.Description,
-                Text = articleForEdit.Text,
-                SourceId = articleForEdit.SourceId,
+                EditModel = _articleMapper.MapArticleDtoToEditModel(articleForEdit),
                 Sources = sources
             };
 
@@ -109,34 +208,17 @@ namespace AspNetSamples.UI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditProcessing([FromForm] EditArticleModel model)
+        public async Task<IActionResult> EditProcessing([FromForm] EditArticleViewModel model)
         {
-            
-            var dto = new ArticleDto()
+            if (ModelState.IsValid)
             {
-                Id = model.Id,
-                Title = model.Title,
-                Description = model.Description,
-                Text = model.Text,
-                SourceId = model.SourceId
-            };
-            
+
+            }
+            var dto = _articleMapper.MapEditArticleModelToArticleDto(model.EditModel);
+
             await _articleService.UpdateArticleAsync(dto, HttpContext.RequestAborted);
 
             return RedirectToAction("Index");
-        }
-
-        //TO BE REWORKED IN FUTURE
-        private static ArticleDto ConvertCreateArticleModelToArticle(CreateArticleModel model)
-        {
-            return new ArticleDto()
-            {
-                //implement 
-                Text = model.Text,
-                Title = model.Title,
-                Description = model.Description,
-
-            };
         }
     }
 }

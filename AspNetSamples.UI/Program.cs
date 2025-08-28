@@ -1,10 +1,15 @@
 using AspNetSamples.Database;
+using AspNetSamples.Mappers;
 using AspNetSamples.Services;
 using AspNetSamples.Services.Abstractions;
 using AspNetSamples.UI.Configuration;
 using AspNetSamples.UI.Middlewares;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Serilog;
+using Serilog.Settings.Configuration;
+using System.Reflection;
+using AspNetSamples.UI.Filters;
 
 namespace AspNetSamples.UI
 {
@@ -12,6 +17,7 @@ namespace AspNetSamples.UI
     {
         public static async Task Main(string[] args)
         {
+            
             var builder = WebApplication.CreateBuilder(args);
 
             // configuration
@@ -26,12 +32,23 @@ namespace AspNetSamples.UI
             builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
             builder.Configuration.AddJsonFile("secrets.json");
 
-            builder.Services.Configure<PageConfigInfo>(builder.Configuration.GetSection("AppSettings:PageConfigInfo"));
+            builder.Services.Configure<PageConfigInfo>(
+                builder.Configuration.GetSection("AppSettings:PageConfigInfo"));
+
+            var options = new ConfigurationReaderOptions { SectionName = "Serilog" };
+            var logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration, options)
+                .CreateLogger();
+            builder.Services.AddSerilog(logger); 
 
             // Add services to the container - DI, IoC Container.
             // Connect to DB
             // Mappers
             builder.Services.AddControllersWithViews();
+            //opt =>
+            //{
+            //    opt.Filters.Add(new CustomResponseResourceFilter());
+            //});
 
             ////builder.Services.AddMvcCore();
             //builder.Services.AddControllers();
@@ -42,12 +59,21 @@ namespace AspNetSamples.UI
 
             //register services
             builder.Services.AddScoped<IArticleService, ArticleService>();
+            builder.Services.AddScoped<IRssService, RssService>();
             builder.Services.AddScoped<ISourceService, SourceService>();
+            builder.Services.AddScoped<IWebParserService, WebParserService>();
+            builder.Services.AddScoped<IHtmlCleanerService, HtmlCleanerService>();
             builder.Services.AddTransient<ILifeTimeSampleService, LifetimeService>();
             builder.Services.AddTransient<ITransientService, TransientService>();
             builder.Services.AddScoped<IScopedService, ScopedService>();
             builder.Services.AddSingleton<ISingletonService, SingletonService>();
+            builder.Services.AddScoped<ArticleMapper>();
+            builder.Services.AddScoped<SourceMapper>();
+            builder.Services.AddScoped<CustomResponseResourceFilter>();
             //builder.Services.AddSingleton(typeof(ISingletonService), typeof(SingletonService));
+
+            //builder.Services.AddAutoMapper(cfg => { }, typeof(Program).Assembly);
+
 
             var app = builder.Build();
 
@@ -59,6 +85,7 @@ namespace AspNetSamples.UI
                 app.UseHsts();
             }
 
+            
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
@@ -66,19 +93,19 @@ namespace AspNetSamples.UI
 
             app.UseAuthorization();
 
-            app.UseMiddleware<TestMiddleware>();
+            //app.UseMiddleware<TestMiddleware>();
 
-            //app.Map("/api/test",
+            //app.MapSourceToSourceDto("/api/test",
             //    () => ((IArticleService)app.Services.GetService(typeof(IArticleService))).GetArticlesByPageAsync(15)
             //        .Result);
 
-            
+
             app.Map("/some/path",
                 (IOptions<PageConfigInfo> options) => options.Value.DefaultPageSize);
 
-            app.MapGet("/routes", (IEnumerable<EndpointDataSource> endpointSources) 
+            app.MapGet("/routes", (IEnumerable<EndpointDataSource> endpointSources)
                 => string.Join(Environment.NewLine, endpointSources.SelectMany(source => source.Endpoints)));
-            
+
             app.MapDefaultControllerRoute();
             //app.MapControllerRoute(
             //    name: "default",

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using AspNetSamples.UI.Configuration;
+using AspNetSamples.UI.Filters;
 using AspNetSamples.UI.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,8 +20,10 @@ namespace AspNetSamples.UI.Controllers
 
         //Action (& Endpoint) - every PUBLIC method
         [HttpGet]
+        [LastVisitResourceFilter]
         public IActionResult Index()
         {
+            _logger.LogInformation("Home page loaded successfully");
             //var secretValue = _configuration["AppSettings:VerySecretValue"];
             //var section = _configuration.GetSection("ConnectionStrings");
             //var children = _configuration.GetChildren();

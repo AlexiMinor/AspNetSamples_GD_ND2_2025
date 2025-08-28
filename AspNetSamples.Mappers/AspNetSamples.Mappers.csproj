@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+	</PropertyGroup>
+	<ItemGroup>
+		<!-- Exclude the output of source generators from the compilation, show it in the IDE -->
+		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+		<None Include="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Riok.Mapperly" Version="4.2.1" />
+    <PackageReference Include="System.ServiceModel.Syndication" Version="9.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AspNetSamples.Core\AspNetSamples.Core.csproj" />
+    <ProjectReference Include="..\AspNetSamples.Database\AspNetSamples.Database.csproj" />
+    <ProjectReference Include="..\AspNetSamples.Models\AspNetSamples.Models.csproj" />
+  </ItemGroup>
+
+</Project>

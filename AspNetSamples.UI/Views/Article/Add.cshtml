@@ -1,4 +1,5 @@
-﻿@model CreateArticleModel
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model AspNetSamples.Models.CreateArticleModel
 @{
     ViewData["Title"] = "Add article";
 }
@@ -6,20 +7,37 @@
 <h2>Add Article</h2>
 
 <form asp-action="AddProcessing" asp-controller="Article" method="post">
+    <div asp-validation-summary="All"></div>
     <div>
-        <span>Title</span>
-        <input asp-for="Title" type="text"/>
+        <label asp-for="Title">Title</label>
+        <input asp-for="Title" type="text" class="form-control"/>
+        <span asp-validation-for="Title"></span>
     </div>
-    
+
     <div>
-        <span>Description</span>
-        <input asp-for="Description" type="text"/>
+        <label asp-for="Description">Description</label>
+        <input asp-for="Description" type="text" class="form-control" />
+        <span asp-validation-for="Description"></span>
     </div>
-    
+
     <div>
-        <span>Text</span>
-        <input asp-for="Text" type="text"/>
+        <label asp-for="Text">Content</label>
+        <input asp-for="Text" type="text" class="form-control" />
+        <span asp-validation-for="Text"></span>
     </div>
-    
-    <button>Submit</button>
+
+    <div>
+        <label asp-for="SourceId">Source Id</label>
+        <select asp-for="SourceId" class="form-control" asp-items="Model.Sources.Select(dto => new SelectListItem(dto.Name, dto.Id.ToString()))"></select>
+        <span asp-validation-for="SourceId"></span>
+    </div>
+
+    <div>
+        <button class="btn btn-primary">Submit</button>
+    </div>
 </form>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial"/>    
+}

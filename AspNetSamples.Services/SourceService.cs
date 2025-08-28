@@ -1,6 +1,7 @@
 ﻿using AspNetSamples.Core.Dto;
 using AspNetSamples.Database;
 using AspNetSamples.Database.Entities;
+using AspNetSamples.Mappers;
 using AspNetSamples.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,10 +10,12 @@ namespace AspNetSamples.Services
     public class SourceService : ISourceService
     {
         private readonly GoodArticleAggregatorContext _context;
+        private readonly SourceMapper _sourceMapper;
 
-        public SourceService(GoodArticleAggregatorContext context)
+        public SourceService(GoodArticleAggregatorContext context, SourceMapper sourceMapper)
         {
             _context = context;
+            _sourceMapper = sourceMapper;
         }
 
         public async Task AddSourcesAsync(IEnumerable<SourceDto> sourceDtos, CancellationToken token = default)
@@ -28,13 +31,21 @@ namespace AspNetSamples.Services
             await _context.SaveChangesAsync(token);
         }
 
-        public async Task<IEnumerable<SourceDto>> GetAllAsync(CancellationToken token = default)
+        public async Task<IEnumerable<SourceDto>> GetAllSourcesAsync(CancellationToken token = default)
         {
-            var sources = await _context.Sources.AsNoTracking().Select(
-                source => new SourceDto { Id = source.Id, Name = source.Name, DomainName = source.DomainName })
+            return await _context.Sources
+                .AsNoTracking()
+                .Select(source => _sourceMapper.MapSourceToSourceDto(source))
                 .ToListAsync(token);
+        }
 
-            return sources;
+        public async Task<List<SourceDto>> GetAllSourcesWithRssAsync(CancellationToken token = default)
+        {
+            return await _context.Sources
+                .AsNoTracking()
+                .Where(source => !string.IsNullOrWhiteSpace(source.RssLink))
+                .Select(source => _sourceMapper.MapSourceToSourceDto(source))
+                .ToListAsync(token);
         }
     }
 }

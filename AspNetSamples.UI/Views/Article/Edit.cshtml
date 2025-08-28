@@ -1,34 +1,36 @@
-﻿@model EditArticleModel
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model EditArticleViewModel
+
 @{
     ViewData["Title"] = "Add article";
 }
 
 <h2>Edit Article</h2>
 
-@using (Html.BeginForm("EditProcessing", "Article", FormMethod.Post))
-{
-    @Html.HiddenFor(model => model.Id)
+<form asp-action="EditProcessing" asp-controller="Article" method="post">
+
+    <input asp-for="EditModel.Id" type="hidden" />
+
     <div>
-        @Html.LabelFor(model => model.Title) @* strict type html helpers *@
-        @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })
-    </div>
-    <div>
-        @Html.LabelFor(model => model.Description) @* strict type html helpers *@
-        @Html.EditorFor(model => model.Description, new { htmlAttributes = new { @class = "form-control" } })
-    </div>
-    <div>
-        @Html.LabelFor(model => model.Text) @* strict type html helpers *@
-        @Html.TextAreaFor(model => model.Text, new { htmlAttributes = new { @class = "form-control" } })
-    </div>
-    <div>
-        @Html.LabelFor(model => model.SourceId) @* strict type html helpers *@
-        @Html.DropDownListFor(model => model.SourceId, 
-            new SelectList(Model.Sources.Select(dto 
-                    => new SelectListItem(dto.Name, dto.Id.ToString())), 
-            "Value", "Text"), new { htmlAttributes = new { @class = "form-control" } })
+        <label asp-for="EditModel.Title">Title</label>
+        <input asp-for="EditModel.Title" type="text" class="form-control" />
     </div>
 
     <div>
+        <label asp-for="EditModel.Description">Description</label>
+        <input asp-for="EditModel.Description" type="text" class="form-control" />
+    </div>
+
+    <div>
+        <label asp-for="EditModel.Text">Content</label>
+        <textarea asp-for="EditModel.Text" class="form-control"></textarea>
+    </div>
+
+    <div>
+        <label asp-for="EditModel.SourceId">Source Id</label>
+        <input asp-for="EditModel.SourceId" type="text" class="form-control" />
+    </div>
+    <div>
         <input type="submit" class="btn btn-primary" value="Submit" />
     </div>
-}
+</form>

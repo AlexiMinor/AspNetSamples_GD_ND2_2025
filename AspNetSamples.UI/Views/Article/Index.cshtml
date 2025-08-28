@@ -9,7 +9,9 @@
 }
 
 <h2>Articles</h2>
-<a asp-action="Add" asp-controller="Article">Add new</a>
+<a asp-action="Add" asp-controller="Article" class="btn btn-primary">Add new</a>
+
+<a asp-action="Aggregate" asp-controller="Article" class="btn btn-warning">Aggregate</a>
 
 @if (Model.Articles.Any())
 {

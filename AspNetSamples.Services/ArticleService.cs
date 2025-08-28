@@ -1,38 +1,39 @@
 ﻿using AspNetSamples.Core.Dto;
 using AspNetSamples.Database;
 using AspNetSamples.Database.Entities;
+using AspNetSamples.Mappers;
 using AspNetSamples.Services.Abstractions;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace AspNetSamples.Services
 {
     public class ArticleService : IArticleService
     {
+        private readonly ArticleMapper _articleMapper;
+        private readonly ILogger<ArticleService> _logger;
         private readonly GoodArticleAggregatorContext _context;
-        public ArticleService(GoodArticleAggregatorContext context)
+
+        private readonly IWebParserService _webParserService;
+
+        public ArticleService(GoodArticleAggregatorContext context, ArticleMapper articleMapper, IWebParserService webParserService, ILogger<ArticleService> logger)
         {
             _context = context;
+            _articleMapper = articleMapper;
+            _webParserService = webParserService;
+            _logger = logger;
         }
 
         public async Task<ArticleDto?> GetArticleByIdAsync(Guid id, CancellationToken token = default)
         {
-           var article = await _context.Articles
-                .AsNoTracking()
-                .Include(article => article.Source)
-                .SingleOrDefaultAsync(article => article.Id.Equals(id), token);
-           return article == null
-               ? null
-               : new ArticleDto
-               {
-                   Id = article.Id,
-                   Title = article.Title,
-                   Description = article.Description,
-                   Text = article.Content,
-                   CreatedAt = article.CreatedAt,
-                   SourceName = article.Source.Name,
-                   SourceId = article.SourceId,
-                   Rate = 0
-               };
+            var article = await _context.Articles
+                 .AsNoTracking()
+                 .Include(article => article.Source)
+                 .SingleOrDefaultAsync(article => article.Id.Equals(id), token);
+            return article == null
+                ? null
+                : _articleMapper.MapArticleToArticleDto(article);
         }
 
         public async Task<List<ArticleDto>> GetArticlesByPageAsync(int currentPage, int pageSize,
@@ -44,25 +45,15 @@ namespace AspNetSamples.Services
                 .OrderBy(article => article.Title) //todo change to smth different, like CreatedAt
                 .Skip((currentPage - 1) * pageSize)
                 .Take(pageSize)
-                .Select(article => new ArticleDto
-                {
-                    Id = article.Id,
-                    Title = article.Title,
-                    Description = article.Description,
-                    Text = article.Content,
-                    CreatedAt = article.CreatedAt,
-                    SourceName = article.Source.Name,
-                    SourceId = article.SourceId,
-                    Rate = 0
-                })
+                .Select(article => _articleMapper.MapArticleToArticleDto(article))
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<int> TotalCountAsync(CancellationToken cancellationToken = default)
         {
             return await _context.Articles
-                .CountAsync();
-                
+                .CountAsync(cancellationToken: cancellationToken);
+
         }
 
         public async Task UpdateArticleAsync(ArticleDto articleDto, CancellationToken token = default)
@@ -70,37 +61,34 @@ namespace AspNetSamples.Services
             var article = await _context.Articles
                 //.AsNoTracking()
                 .SingleOrDefaultAsync(article => article.Id.Equals(articleDto.Id), cancellationToken: token);
-            
-            if (article == null) 
+
+            if (article == null)
                 return;
 
-            //await _context.Articles.Update(article)
-            
-            
             article.Title = articleDto.Title;
             article.Description = articleDto.Description;
-            article.Content = articleDto.Text;
+            article.Content = articleDto.Content;
             article.SourceId = articleDto.SourceId;
             //_context.Update(article);
             await _context.SaveChangesAsync(token);
-            
+
             //var patchDictionary = new Dictionary<string, object>();
             ////not best practice, but for simplicity
-            //if (!article.Content.Equals(articleDto.Text))
+            //if (!article.Content.Equals(articleDto.Content))
             //{
-            //    patchDictionary.Add(nameof(article.Content), articleDto.Text);
+            //    patchDictionary.Add(nameof(article.Content), articleDto.Content);
             //}
-            
+
             //if (!article.Title.Equals(articleDto.Title))
             //{
             //    patchDictionary.Add(nameof(article.Title), articleDto.Title);
             //}
-            
+
             //if (!article.Description.Equals(articleDto.Description))
             //{
             //    patchDictionary.Add(nameof(article.Description), articleDto.Description);
             //}
-            
+
             //if (!article.SourceId.Equals(articleDto.SourceId))
             //{
             //    patchDictionary.Add(nameof(article.SourceId), articleDto.SourceId);
@@ -145,39 +133,49 @@ namespace AspNetSamples.Services
                 defaultSourceId = (await _context.Sources.FirstOrDefaultAsync(token)).Id;
             }
 
-
             //add to database using EF
-            await _context.Articles.AddAsync(new Article
-            {
-                Id = articleDto.Id,
-                Title = articleDto.Title,
-                Description = articleDto.Description,
-                Content = articleDto.Text,
-                OriginUrl = "https://example.com/article/" + articleDto.Id,
-                CreatedAt = articleDto.CreatedAt,
-                SourceId = defaultSourceId
-
-            }, token);
+            await _context.Articles.AddAsync(_articleMapper.MapArticleDtoToArticle(articleDto), token);
 
             await _context.SaveChangesAsync(token);
         }
 
         public async Task AddArticlesAsync(IEnumerable<ArticleDto> articleDto, CancellationToken token = default)
         {
-            var articles = articleDto.Select(article => new Article
-            {
-                Id = article.Id,
-                Title = article.Title,
-                Description = article.Description,
-                Content = article.Text,
-                CreatedAt = article.CreatedAt,
-                OriginUrl = "https://example.com/article/" + article.Id,
-
-                SourceId = article.SourceId
-            }).ToArray();
+            var articles = articleDto
+                .Select(article => _articleMapper
+                    .MapArticleDtoToArticle(article))
+                .ToArray();
 
             await _context.Articles.AddRangeAsync(articles, token);
             await _context.SaveChangesAsync(token);
+        }
+
+        public HashSet<string> GetExistingArticleUrls(CancellationToken token)
+        {
+            return _context.Articles.AsNoTracking().Select(article => article.OriginUrl).ToHashSet();
+        }
+
+        public async Task AggregateArticleTextAsync(CancellationToken token)
+        {
+            try
+            {
+                var articles = await _context.Articles
+                    .Where(article => string.IsNullOrEmpty(article.Content))
+                    .ToArrayAsync(token);
+          
+                foreach (var article in articles)
+                {
+                    var articleText = await _webParserService.ParseArticlesAsync(article.OriginUrl, token);
+                    article.Content = articleText;
+                    await _context.SaveChangesAsync(token);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error during articles web scrapping");
+                throw;
+            }
+
         }
     }
 }

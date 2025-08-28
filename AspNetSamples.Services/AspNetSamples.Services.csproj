@@ -7,8 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="15.0.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.2" />
+    <PackageReference Include="System.ServiceModel.Syndication" Version="9.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\AspNetSamples.Core\AspNetSamples.Core.csproj" />
     <ProjectReference Include="..\AspNetSamples.Database\AspNetSamples.Database.csproj" />
+    <ProjectReference Include="..\AspNetSamples.Mappers\AspNetSamples.Mappers.csproj" />
   </ItemGroup>
 
 </Project>

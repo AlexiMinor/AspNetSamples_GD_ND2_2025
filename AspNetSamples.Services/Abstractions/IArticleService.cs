@@ -4,7 +4,7 @@ namespace AspNetSamples.Services.Abstractions;
 
 public interface IArticleService
 {
-    Task<ArticleDto> GetArticleByIdAsync(Guid id, CancellationToken token = default);
+    public Task<ArticleDto> GetArticleByIdAsync(Guid id, CancellationToken token = default);
     public Task<List<ArticleDto>> GetArticlesByPageAsync(int currentPage, int pageSize,
         CancellationToken cancellationToken = default);
     public Task<int> TotalCountAsync(CancellationToken cancellationToken = default);
@@ -12,4 +12,6 @@ public interface IArticleService
     public Task DeleteArticleAsync(Guid id, CancellationToken token = default);
     public Task AddArticleAsync(ArticleDto articleDto, CancellationToken token =default);
     public Task AddArticlesAsync(IEnumerable<ArticleDto> articleDto, CancellationToken token =default);
+    public HashSet<string> GetExistingArticleUrls(CancellationToken token);
+    public Task AggregateArticleTextAsync(CancellationToken token);
 }

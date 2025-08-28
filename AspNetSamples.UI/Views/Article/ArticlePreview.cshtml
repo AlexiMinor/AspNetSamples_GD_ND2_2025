@@ -4,7 +4,7 @@
 <div id="@Model.Id">
     <h3>@Model.Title</h3>
     <i>@Model.SourceName</i>
-    <p>@Model.Text</p>
+    <p>@Model.Description</p>
     <span>@Model.Rate</span>
     
     @Html.ActionLink("Details", "Details", "Article", new {id = Model.Id})

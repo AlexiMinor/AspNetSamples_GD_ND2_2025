@@ -4,6 +4,7 @@ using AspNetSamples.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetSamples.Database.Migrations
 {
     [DbContext(typeof(GoodArticleAggregatorContext))]
-    partial class GoodArticleAggregatorContextModelSnapshot : ModelSnapshot
+    [Migration("20250819174234_Rate")]
+    partial class Rate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,6 +32,7 @@ namespace AspNetSamples.Database.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -71,9 +75,6 @@ namespace AspNetSamples.Database.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RssLink")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");

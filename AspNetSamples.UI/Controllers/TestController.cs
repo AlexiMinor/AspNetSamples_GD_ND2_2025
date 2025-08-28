@@ -1,4 +1,5 @@
 ﻿using AspNetSamples.Services.Abstractions;
+using AspNetSamples.UI.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders.Physical;
 
@@ -35,6 +36,8 @@ public class TestController : Controller
     }
 
     [HttpGet]
+    [TypeFilter(typeof(CustomResponseResourceFilter))]
+    //[ServiceFilter(typeof(CustomResponseResourceFilter))]
     public IActionResult Index(int id)
     {
         var result1 = _lifeTimeSampleService1.Test();

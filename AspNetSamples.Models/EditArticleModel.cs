@@ -1,7 +1,6 @@
 ﻿using AspNetSamples.Core.Dto;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace AspNetSamples.UI.Models;
+namespace AspNetSamples.Models;
 
 public class EditArticleModel
 {
@@ -13,5 +12,4 @@ public class EditArticleModel
     
     public Guid SourceId { get; set; }
 
-    public IEnumerable<SourceDto> Sources { get; set; }
 }
