@@ -5,8 +5,10 @@ namespace AspNetSamples.Database
 {
     public class GoodArticleAggregatorContext : DbContext
     {
-        public DbSet<Article> Articles { get; set; }
+        public DbSet<Article?> Articles { get; set; }
+        public DbSet<Role> Roles { get; set; }
         public DbSet<Source> Sources { get; set; }
+        public DbSet<User> Users { get; set; }
         
         
         public GoodArticleAggregatorContext (DbContextOptions<GoodArticleAggregatorContext> options)

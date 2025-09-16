@@ -14,7 +14,7 @@ public partial class ArticleMapper
     [MapProperty(nameof(Article.Source), nameof(ArticleDto.SourceDto))] 
     public partial ArticleDto MapArticleToArticleDto(Article article);
     
-    public partial Article MapArticleDtoToArticle(ArticleDto dto);
+    public partial Article? MapArticleDtoToArticle(ArticleDto dto);
 
 
     [MapProperty(nameof(CreateArticleModel.Text), nameof(ArticleDto.Content))]

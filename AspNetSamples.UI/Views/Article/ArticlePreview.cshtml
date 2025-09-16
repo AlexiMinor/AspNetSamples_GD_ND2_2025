@@ -1,20 +1,19 @@
 ﻿@using AspNetSamples.Core.Dto
 @model ArticleDto 
 
-<div id="@Model.Id">
-    <h3>@Model.Title</h3>
-    <i>@Model.SourceName</i>
-    <p>@Model.Description</p>
-    <span>@Model.Rate</span>
-    
-    @Html.ActionLink("Details", "Details", "Article", new {id = Model.Id})
-    <a asp-action="Details" asp-controller="Article" asp-route-id="@Model.Id">Details</a>
-    
+<div class="card">
+    @if (!string.IsNullOrWhiteSpace(Model.DescriptionPictureUrl))
+    {
+        @Html.Raw(Model.DescriptionPictureUrl)
+    }
+    <div class="card-body">
+        <h5 class="card-title">@Model.Title</h5>
+        <h6 class="card-subtitle mb-2 text-body-secondary">@Model.SourceName - @Model.CreatedAt</h6>
+        <div class="card-text">
+            @Model.Description
+        </div>
+        <a class="btn btn-primary" asp-action="Details" asp-controller="Article" asp-route-id="@Model.Id">Details</a>
+        <a href="@Model.OriginUrl">Read at source</a>
+        @* <a href="/article/Edit/@Model.Id"> Edit </a> *@
+    </div>
 </div>
-<a href="/article/Edit/@Model.Id"> Edit </a>
-<hr>
-
-@*
-    asp-route-[parameterName]
-    asp-fragment="[fragmentName]" -> address#fragmentName
-*@

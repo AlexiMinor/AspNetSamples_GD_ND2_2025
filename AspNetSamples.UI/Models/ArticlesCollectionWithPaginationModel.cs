@@ -4,6 +4,7 @@ namespace AspNetSamples.UI.Models;
 
 public class ArticlesCollectionWithPaginationModel
 {
-    public List<ArticleDto> Articles { get; set; } 
+    public bool IsUserAdmin { get; set; }
+    public ArticleDto[] Articles { get; set; } 
     public PagingInfoModel PagingInfo { get; set; }
 }

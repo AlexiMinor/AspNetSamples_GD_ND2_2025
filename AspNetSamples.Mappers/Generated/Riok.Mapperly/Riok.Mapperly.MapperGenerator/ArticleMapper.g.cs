@@ -25,6 +25,7 @@ namespace AspNetSamples.Mappers
                 target.SourceDto = null;
             }
             target.OriginUrl = article.OriginUrl;
+            target.DescriptionPictureUrl = article.DescriptionPictureUrl;
             target.SourceId = article.SourceId;
             target.Rate = article.Rate;
             target.CreatedAt = article.CreatedAt;
@@ -32,7 +33,8 @@ namespace AspNetSamples.Mappers
         }
 
         [global::System.CodeDom.Compiler.GeneratedCode("Riok.Mapperly", "4.2.1.0")]
-        public partial global::AspNetSamples.Database.Entities.Article MapArticleDtoToArticle(global::AspNetSamples.Core.Dto.ArticleDto dto)
+        [return: global::System.Diagnostics.CodeAnalysis.NotNullIfNotNull(nameof(dto))]
+        public partial global::AspNetSamples.Database.Entities.Article? MapArticleDtoToArticle(global::AspNetSamples.Core.Dto.ArticleDto dto)
         {
             var target = new global::AspNetSamples.Database.Entities.Article();
             target.Id = dto.Id;
@@ -40,6 +42,7 @@ namespace AspNetSamples.Mappers
             target.Description = dto.Description;
             target.Content = dto.Content;
             target.OriginUrl = dto.OriginUrl;
+            target.DescriptionPictureUrl = dto.DescriptionPictureUrl;
             target.CreatedAt = dto.CreatedAt;
             target.Rate = dto.Rate;
             target.SourceId = dto.SourceId;

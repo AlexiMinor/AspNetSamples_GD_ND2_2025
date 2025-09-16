@@ -4,6 +4,7 @@ using AspNetSamples.Mappers;
 using AspNetSamples.Models;
 using AspNetSamples.Services.Abstractions;
 using AspNetSamples.UI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AspNetSamples.UI.Controllers
@@ -30,7 +31,7 @@ namespace AspNetSamples.UI.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> Index(int currentPage = 1, int pageSize = 15)
+        public async Task<IActionResult> Index(int currentPage = 1, int pageSize = 12)
         {
             try
             {
@@ -40,6 +41,7 @@ namespace AspNetSamples.UI.Controllers
                 _logger.LogDebug("Articles counts from db");
                 var model = new ArticlesCollectionWithPaginationModel()
                 {
+                    IsUserAdmin = User.IsInRole("Admin"),
                     Articles = articles,
                     PagingInfo = new PagingInfoModel()
                     {
@@ -56,7 +58,7 @@ namespace AspNetSamples.UI.Controllers
                 _logger.LogError(e, "Error in Index action");
                 throw;
             }
-          
+
         }
 
         [HttpGet]
@@ -80,11 +82,11 @@ namespace AspNetSamples.UI.Controllers
                 _logger.LogError(e, "Error in Add action");
                 throw;
             }
-            
+
         }
 
-
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Aggregate()
         {
             return View();
@@ -95,43 +97,15 @@ namespace AspNetSamples.UI.Controllers
         {
             try
             {
-                _logger.LogInformation("Aggregation started");
-                var sourcesToAggregate = await _sourceService.GetAllSourcesWithRssAsync(HttpContext.RequestAborted);
-                _logger.LogDebug($"Sources to aggregate: {sourcesToAggregate.Count}");
-
-                if (!sourcesToAggregate.Any())
-                {
-                    _logger.LogWarning("No sources with RSS found for aggregation");
-                    return RedirectToAction("Index");
-                }
-                var aggregatedArticles = new ConcurrentBag<ArticleDto>();
-                await Parallel.ForEachAsync(sourcesToAggregate, HttpContext.RequestAborted,
-                    async (source, token) =>
-                    {
-                        var articles = await _rssService.GetRssFeedBySourceAsync(source, token);
-                        if (articles != null && articles.Any())
-                        {
-                            foreach (var article in articles)
-                            {
-                                aggregatedArticles.Add(article);
-                            }
-                        }
-                    });
-                _logger.LogDebug($"Aggregated articles count: {aggregatedArticles.Count}");
-                await _articleService.AddArticlesAsync(aggregatedArticles, HttpContext.RequestAborted);
-                _logger.LogInformation("Aggregated articles added to database");
-                _logger.LogInformation("Starting web scrapping for articles");
-                await _articleService.AggregateArticleTextAsync(HttpContext.RequestAborted);
-                _logger.LogInformation("Web scrapping completed");
-
+                await _articleService.AggregateArticlesAsync(HttpContext.RequestAborted);
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during aggregation process");
-                return StatusCode(500, new {ErrorMessage = ex.Message});
+                return StatusCode(500, new { ErrorMessage = ex.Message });
             }
-            
+
         }
 
 
@@ -153,8 +127,8 @@ namespace AspNetSamples.UI.Controllers
             //var _articleService = HttpContext.RequestServices.GetRequiredService<IArticleService>();
 
             //add cancellation token from controller context
-            await _articleService.AddArticleAsync(_articleMapper.MapCreateArticleModelToArticleDto(model),
-                HttpContext.RequestAborted);
+            //await _articleService.AddArticleAsync(_articleMapper.MapCreateArticleModelToArticleDto(model),
+            //    HttpContext.RequestAborted);
 
             return RedirectToAction("Index");
         }
@@ -216,7 +190,7 @@ namespace AspNetSamples.UI.Controllers
             }
             var dto = _articleMapper.MapEditArticleModelToArticleDto(model.EditModel);
 
-            await _articleService.UpdateArticleAsync(dto, HttpContext.RequestAborted);
+            //await _articleService.UpdateArticleAsync(dto, HttpContext.RequestAborted);
 
             return RedirectToAction("Index");
         }

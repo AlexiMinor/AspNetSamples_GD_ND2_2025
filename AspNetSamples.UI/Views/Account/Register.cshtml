@@ -1,0 +1,35 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model AspNetSamples.Models.RegisterModel
+@{
+    ViewBag.Title = "Access Denied";
+    Layout = "_Layout";
+}
+
+<h2>Register User</h2>
+
+<form asp-controller="Account" asp-action="RegisterProcessing" method="post">
+    <div class="form-floating mb-3">
+        <input type="email" asp-for="Email" class="form-control" placeholder="name@example.com">
+        <label asp-for="Email">Email address</label>
+    </div>
+    <div class="form-floating mb-3">
+        <input type="text" asp-for="UserName" class="form-control">
+        <label asp-for="UserName">Name</label>
+    </div>
+    <div class="form-floating mb-3">
+        <input type="password" class="form-control" asp-for="Password">
+        <label asp-for="Password">Password</label>
+    </div>
+    <div class="form-floating mb-3">
+        <input type="password" class="form-control" asp-for="ConfirmPassword">
+        <label asp-for="ConfirmPassword">Confirm password</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Register</button>
+</form>
+
+@section Scripts
+{
+
+    <script src="lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

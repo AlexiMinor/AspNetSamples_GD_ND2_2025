@@ -38,6 +38,9 @@ namespace AspNetSamples.Database.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DescriptionPictureUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OriginUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -57,6 +60,21 @@ namespace AspNetSamples.Database.Migrations
                     b.HasIndex("SourceId");
 
                     b.ToTable("Articles");
+                });
+
+            modelBuilder.Entity("AspNetSamples.Database.Entities.Role", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("AspNetSamples.Database.Entities.Source", b =>
@@ -81,6 +99,43 @@ namespace AspNetSamples.Database.Migrations
                     b.ToTable("Sources");
                 });
 
+            modelBuilder.Entity("AspNetSamples.Database.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("FailedLoginAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastLogin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Salt")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("AspNetSamples.Database.Entities.Article", b =>
                 {
                     b.HasOne("AspNetSamples.Database.Entities.Source", "Source")
@@ -90,6 +145,22 @@ namespace AspNetSamples.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Source");
+                });
+
+            modelBuilder.Entity("AspNetSamples.Database.Entities.User", b =>
+                {
+                    b.HasOne("AspNetSamples.Database.Entities.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("AspNetSamples.Database.Entities.Role", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("AspNetSamples.Database.Entities.Source", b =>

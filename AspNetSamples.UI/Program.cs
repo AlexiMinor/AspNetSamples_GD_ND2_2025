@@ -1,15 +1,15 @@
+using AspNetSamples.DataAccess.Handlers.CommandHandlers;
 using AspNetSamples.Database;
 using AspNetSamples.Mappers;
 using AspNetSamples.Services;
 using AspNetSamples.Services.Abstractions;
 using AspNetSamples.UI.Configuration;
-using AspNetSamples.UI.Middlewares;
+using AspNetSamples.UI.Filters;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Settings.Configuration;
-using System.Reflection;
-using AspNetSamples.UI.Filters;
 
 namespace AspNetSamples.UI
 {
@@ -17,7 +17,7 @@ namespace AspNetSamples.UI
     {
         public static async Task Main(string[] args)
         {
-            
+
             var builder = WebApplication.CreateBuilder(args);
 
             // configuration
@@ -39,7 +39,7 @@ namespace AspNetSamples.UI
             var logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Configuration, options)
                 .CreateLogger();
-            builder.Services.AddSerilog(logger); 
+            builder.Services.AddSerilog(logger);
 
             // Add services to the container - DI, IoC Container.
             // Connect to DB
@@ -50,25 +50,46 @@ namespace AspNetSamples.UI
             //    opt.Filters.Add(new CustomResponseResourceFilter());
             //});
 
-            ////builder.Services.AddMvcCore();
-            //builder.Services.AddControllers();
+            builder.Services
+                .AddAuthentication(opt =>
+                {
+                    opt.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    opt.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    opt.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                })
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, opt =>
+                {
+                    opt.LoginPath = "/Account/Login";
+                    opt.AccessDeniedPath = "/Account/AccessDenied";
+                    opt.LogoutPath = "/Account/Logout";
+                    opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+                });
+
+            builder.Services.AddAuthorization();
 
             // Register the DbContext with the DI container
             builder.Services.AddDbContext<GoodArticleAggregatorContext>(
                 opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            builder.Services.AddMediatR(cfg =>
+                cfg.RegisterServicesFromAssemblyContaining<AddArticlesCollectionCommandHandler>());
+
             //register services
             builder.Services.AddScoped<IArticleService, ArticleService>();
             builder.Services.AddScoped<IRssService, RssService>();
             builder.Services.AddScoped<ISourceService, SourceService>();
+            builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IWebParserService, WebParserService>();
             builder.Services.AddScoped<IHtmlCleanerService, HtmlCleanerService>();
-            builder.Services.AddTransient<ILifeTimeSampleService, LifetimeService>();
-            builder.Services.AddTransient<ITransientService, TransientService>();
-            builder.Services.AddScoped<IScopedService, ScopedService>();
-            builder.Services.AddSingleton<ISingletonService, SingletonService>();
+            builder.Services.AddScoped<ISyndicationFeedReader, SyndicationFeedReader>();
+            //builder.Services.AddTransient<ILifeTimeSampleService, LifetimeService>();
+            //builder.Services.AddTransient<ITransientService, TransientService>();
+            //builder.Services.AddScoped<IScopedService, ScopedService>();
+            //builder.Services.AddSingleton<ISingletonService, SingletonService>();
             builder.Services.AddScoped<ArticleMapper>();
             builder.Services.AddScoped<SourceMapper>();
+            builder.Services.AddScoped<UserMapper>();
+            builder.Services.AddScoped<RoleMapper>();
             builder.Services.AddScoped<CustomResponseResourceFilter>();
             //builder.Services.AddSingleton(typeof(ISingletonService), typeof(SingletonService));
 
@@ -85,12 +106,13 @@ namespace AspNetSamples.UI
                 app.UseHsts();
             }
 
-            
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             //app.UseMiddleware<TestMiddleware>();
