@@ -13,4 +13,5 @@ public class UserDto
 
     public Guid RoleId { get; set; }
     public RoleDto? Role { get; set; }
+    //public RoleDto[] Roles { get; set; }
 }

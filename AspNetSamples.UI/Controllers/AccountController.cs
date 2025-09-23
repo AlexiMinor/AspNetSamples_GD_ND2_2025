@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using AspNetSamples.Core.Dto;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication;
 
 namespace AspNetSamples.UI.Controllers;
@@ -76,6 +77,9 @@ public class AccountController : Controller
 
         var registeredUser = await _userService.RegisterUserAsync(userDto);
 
+        //var jobId = BackgroundJob.Enqueue(
+        //    () => _emailService.SendRegistrationConfirmMail(userDto.Email)); // Fire and forget
+
         await LoginUser(registeredUser);
 
         return RedirectToAction("Index", "Home");
@@ -92,19 +96,31 @@ public class AccountController : Controller
     public IActionResult LogoutProcessing(string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
+     
         return View();
+    }
+
+    [HttpGet]
+    public IActionResult Manage()
+    {
+        return Ok();
     }
 
     private async Task LoginUser(UserDto userDto)
     {
-        var claims = new List<Claim>
+        var claims = new List<Claim>()
         {
             new Claim(ClaimTypes.Email, userDto.Email),
-            //new Claim(ClaimTypes.Name, userDto.Name),
+            new Claim(ClaimTypes.Name, userDto.Name),
             new Claim(ClaimTypes.Role, userDto.Role.Name),
-            new Claim("id", userDto.Id.ToString())
+            new Claim("id", userDto.Id.ToString()),
+            //new Claim("custom_claim", "custom_value")
         };
+
+        //userDto.Roles.Select(roleDto => new Claim(ClaimTypes.Role, roleDto.Name)).ToArray();
+        //claims.AddRange(userDto.Roles.Select(roleDto => new Claim(ClaimTypes.Role, roleDto.Name)).ToArray());
         var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
         var principal = new ClaimsPrincipal(claimIdentity);
         await HttpContext.SignInAsync(principal);
     }

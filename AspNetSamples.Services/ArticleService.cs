@@ -49,83 +49,7 @@ namespace AspNetSamples.Services
 
         }
 
-        //public async Task UpdateArticleAsync(ArticleDto articleDto, CancellationToken token = default)
-        //{
-        //    var article = await _context.Articles
-        //        //.AsNoTracking()
-        //        .SingleOrDefaultAsync(article => article.Id.Equals(articleDto.Id), cancellationToken: token);
-
-        //    if (article == null)
-        //        return;
-
-        //    article.Title = articleDto.Title;
-        //    article.Description = articleDto.Description;
-        //    article.Content = articleDto.Content;
-        //    article.SourceId = articleDto.SourceId;
-        //    //_context.Update(article);
-        //    await _context.SaveChangesAsync(token);
-
-        //    //var patchDictionary = new Dictionary<string, object>();
-        //    ////not best practice, but for simplicity
-        //    //if (!article.Content.Equals(articleDto.Content))
-        //    //{
-        //    //    patchDictionary.Add(nameof(article.Content), articleDto.Content);
-        //    //}
-
-        //    //if (!article.Title.Equals(articleDto.Title))
-        //    //{
-        //    //    patchDictionary.Add(nameof(article.Title), articleDto.Title);
-        //    //}
-
-        //    //if (!article.Description.Equals(articleDto.Description))
-        //    //{
-        //    //    patchDictionary.Add(nameof(article.Description), articleDto.Description);
-        //    //}
-
-        //    //if (!article.SourceId.Equals(articleDto.SourceId))
-        //    //{
-        //    //    patchDictionary.Add(nameof(article.SourceId), articleDto.SourceId);
-        //    //}
-
-        //    //if (patchDictionary.Any())
-        //    //{
-        //    //    var entry = _context.Entry(article);
-        //    //    entry.CurrentValues.SetValues(patchDictionary);
-        //    //    entry.State = EntityState.Modified; //auto
-        //    //    await _context.SaveChangesAsync(token);
-
-        //    //}
-        //}
-        
-        //public async Task AddArticleAsync(ArticleDto articleDto, CancellationToken token = default)
-        //{
-        //    articleDto.Id = Guid.NewGuid();
-        //    articleDto.CreatedAt = DateTime.Now;
-
-        //    var defaultSourceId = Guid.NewGuid();
-
-        //    if (!_context.Sources.Any())
-        //    {
-        //        var defaultSource = new Source
-        //        {
-        //            Id = defaultSourceId,
-        //            Name = "Default Source",
-        //            DomainName = "defaultsource.com"
-        //        };
-        //        await _context.Sources.AddAsync(defaultSource, token);
-        //    }
-        //    else
-        //    {
-        //        defaultSourceId = (await _context.Sources.FirstOrDefaultAsync(token)).Id;
-        //    }
-
-        //    //add to database using EF
-        //    await _context.Articles.AddAsync(_articleMapper.MapArticleDtoToArticle(articleDto), token);
-
-        //    await _context.SaveChangesAsync(token);
-        //}
-
-        public async Task WebScrapArticleTextAsync(CancellationToken token)
+        public async Task WebScrapArticleTextAsync(CancellationToken token = default)
         {
             try
             {
@@ -152,7 +76,7 @@ namespace AspNetSamples.Services
             }
         }
 
-        public async Task AggregateArticlesAsync(CancellationToken token)
+        public async Task AggregateArticlesAsync(CancellationToken token = default)
         {
             _logger.LogInformation("Aggregation started");
             var sourcesToAggregate = await _mediator.Send(

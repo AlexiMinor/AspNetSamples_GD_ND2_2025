@@ -1,10 +1,13 @@
+using System.Security.Claims;
 using AspNetSamples.DataAccess.Handlers.CommandHandlers;
 using AspNetSamples.Database;
 using AspNetSamples.Mappers;
 using AspNetSamples.Services;
 using AspNetSamples.Services.Abstractions;
+using AspNetSamples.UI.AuthRequirements;
 using AspNetSamples.UI.Configuration;
 using AspNetSamples.UI.Filters;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -65,7 +68,16 @@ namespace AspNetSamples.UI
                     opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
                 });
 
-            builder.Services.AddAuthorization();
+            builder.Services.AddAuthorization(opts =>
+            {
+                opts.AddPolicy("AdminOnly", policy =>
+                    policy.RequireClaim(ClaimTypes.Role, "Admin"));
+
+                opts.AddPolicy("AgeLimited", policy =>
+                {
+                    policy.Requirements.Add(new AgeRequirement(int.Parse(builder.Configuration["AppSettings:MinAge"])));
+                });
+            });
 
             // Register the DbContext with the DI container
             builder.Services.AddDbContext<GoodArticleAggregatorContext>(
@@ -76,6 +88,7 @@ namespace AspNetSamples.UI
 
             //register services
             builder.Services.AddScoped<IArticleService, ArticleService>();
+            builder.Services.AddScoped<IArticleRateService, ArticleRateService>();
             builder.Services.AddScoped<IRssService, RssService>();
             builder.Services.AddScoped<ISourceService, SourceService>();
             builder.Services.AddScoped<IUserService, UserService>();
@@ -91,9 +104,16 @@ namespace AspNetSamples.UI
             builder.Services.AddScoped<UserMapper>();
             builder.Services.AddScoped<RoleMapper>();
             builder.Services.AddScoped<CustomResponseResourceFilter>();
-            //builder.Services.AddSingleton(typeof(ISingletonService), typeof(SingletonService));
 
-            //builder.Services.AddAutoMapper(cfg => { }, typeof(Program).Assembly);
+            builder.Services
+                .AddHangfire(configuration => configuration
+                    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                    .UseSimpleAssemblyNameTypeSerializer()
+                    .UseRecommendedSerializerSettings()
+                    .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddHangfireServer();
+
 
 
             var app = builder.Build();
@@ -109,7 +129,7 @@ namespace AspNetSamples.UI
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
+            app.UseHangfireDashboard();
             app.UseRouting();
 
             app.UseAuthentication();

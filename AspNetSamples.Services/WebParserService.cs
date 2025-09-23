@@ -2,6 +2,7 @@
 using AspNetSamples.Services.Abstractions;
 using HtmlAgilityPack;
 using System;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
 namespace AspNetSamples.Services;
@@ -56,15 +57,6 @@ public class WebParserService : IWebParserService
                 socialNetworkNode.ParentNode.RemoveChild(socialNetworkNode);
             }
 
-            var scriptNodes = data.SelectNodes(".//script");
-            if (scriptNodes.Any())
-            {
-                foreach (var scriptNode in scriptNodes)
-                {
-                    scriptNode.ParentNode.RemoveChild(scriptNode);
-                }
-            }
-
             var adWidget = data.SelectSingleNode(".//div[@class='news-widget']");
             if (adWidget != null)
             {
@@ -78,6 +70,10 @@ public class WebParserService : IWebParserService
             }
 
             var htmlArticleText = data.InnerHtml;
+
+            var regex = "/<script\\b[^>]*>([\\s\\S]*?)<\\/script>";
+            htmlArticleText = Regex.Replace(htmlArticleText, regex, string.Empty, RegexOptions.IgnoreCase);
+
             return htmlArticleText;
         }
         catch (Exception e)

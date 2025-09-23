@@ -1,9 +1,11 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using AspNetSamples.Core.Dto;
 using AspNetSamples.Mappers;
 using AspNetSamples.Models;
 using AspNetSamples.Services.Abstractions;
 using AspNetSamples.UI.Models;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,6 +14,7 @@ namespace AspNetSamples.UI.Controllers
     public class ArticleController : Controller
     {
         private readonly IArticleService _articleService;
+        private readonly IArticleRateService _articleRateService;
         private readonly ISourceService _sourceService;
         private readonly IRssService _rssService;
         private readonly ArticleMapper _articleMapper;
@@ -20,13 +23,14 @@ namespace AspNetSamples.UI.Controllers
         public ArticleController(IArticleService articleService,
             ISourceService sourceService,
             ArticleMapper articleMapper,
-            IRssService rssService, ILogger<ArticleController> logger)
+            IRssService rssService, ILogger<ArticleController> logger, IArticleRateService articleRateService)
         {
             _articleService = articleService;
             _sourceService = sourceService;
             _articleMapper = articleMapper;
             _rssService = rssService;
             _logger = logger;
+            _articleRateService = articleRateService;
         }
 
 
@@ -86,13 +90,15 @@ namespace AspNetSamples.UI.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Aggregate()
         {
             return View();
         }
 
         [HttpPost]
+        //[Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AggregateProcessing()
         {
             try
@@ -160,6 +166,30 @@ namespace AspNetSamples.UI.Controllers
 
             return NotFound();
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Rate(Guid id)
+        {
+            try
+            {
+                var sw = new Stopwatch();
+                sw.Start();
+                var token = HttpContext.RequestAborted;
+                await _articleRateService.RateArticlesInParallelAsync(token);
+
+                sw.Stop();
+                return Ok(new { Duration = sw.ElapsedMilliseconds });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            
+        }
+
+
+
 
         [HttpGet]
         public async Task<IActionResult> Edit(Guid id)

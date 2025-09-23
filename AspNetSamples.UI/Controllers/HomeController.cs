@@ -1,28 +1,48 @@
 using System.Diagnostics;
+using AspNetSamples.Services.Abstractions;
 using AspNetSamples.UI.Configuration;
 using AspNetSamples.UI.Filters;
 using AspNetSamples.UI.Models;
+using Hangfire;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AspNetSamples.UI.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly IArticleService _articleService;
         private readonly ILogger<HomeController> _logger; //services
         private readonly IConfiguration _configuration; 
         //constructor
         public HomeController(ILogger<HomeController> logger, 
-            IConfiguration configuration)
+            IConfiguration configuration, IArticleService articleService)
         {
             _logger = logger;
             _configuration = configuration;
+            _articleService = articleService;
         }
 
         //Action (& Endpoint) - every PUBLIC method
         [HttpGet]
         [LastVisitResourceFilter]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            //should be placed in app startup
+            RecurringJob.AddOrUpdate("article-aggregation",
+                ()=> _articleService.AggregateArticlesAsync(CancellationToken.None),
+                "0 * * * *"
+                );
+
+            var backJobId = BackgroundJob.Enqueue(
+                () => _logger.LogDebug("Fire-and-forget job executed")
+                );
+
+            var cJobId = BackgroundJob.ContinueJobWith(
+                backJobId,
+                () => _logger.LogDebug("Continuation job executed")
+                );
+
             _logger.LogInformation("Home page loaded successfully");
             //var secretValue = _configuration["AppSettings:VerySecretValue"];
             //var section = _configuration.GetSection("ConnectionStrings");
@@ -43,7 +63,10 @@ namespace AspNetSamples.UI.Controllers
         {
             return View();
         }
+
+
         [HttpGet]
+        [Authorize(Policy = "AgeLimited")]
         public IActionResult Privacy()
         {
             return View();
