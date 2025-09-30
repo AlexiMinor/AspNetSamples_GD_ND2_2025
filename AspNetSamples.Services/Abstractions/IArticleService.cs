@@ -12,4 +12,5 @@ public interface IArticleService
     //public Task AddArticleAsync(ArticleDto articleDto, CancellationToken token =default);
     public Task WebScrapArticleTextAsync(CancellationToken token = default);
     public Task AggregateArticlesAsync(CancellationToken token = default);
+    Task<int> GetArticlesCountAsync(CancellationToken httpContextRequestAborted);
 }

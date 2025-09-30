@@ -28,20 +28,20 @@ namespace AspNetSamples.UI.Controllers
         [LastVisitResourceFilter]
         public async Task<IActionResult> Index()
         {
-            //should be placed in app startup
-            RecurringJob.AddOrUpdate("article-aggregation",
-                ()=> _articleService.AggregateArticlesAsync(CancellationToken.None),
-                "0 * * * *"
-                );
+            ////should be placed in app startup
+            //RecurringJob.AddOrUpdate("article-aggregation",
+            //    ()=> _articleService.AggregateArticlesAsync(CancellationToken.None),
+            //    "0 * * * *"
+            //    );
 
-            var backJobId = BackgroundJob.Enqueue(
-                () => _logger.LogDebug("Fire-and-forget job executed")
-                );
+            //var backJobId = BackgroundJob.Enqueue(
+            //    () => _logger.LogDebug("Fire-and-forget job executed")
+            //    );
 
-            var cJobId = BackgroundJob.ContinueJobWith(
-                backJobId,
-                () => _logger.LogDebug("Continuation job executed")
-                );
+            //var cJobId = BackgroundJob.ContinueJobWith(
+            //    backJobId,
+            //    () => _logger.LogDebug("Continuation job executed")
+            //    );
 
             _logger.LogInformation("Home page loaded successfully");
             //var secretValue = _configuration["AppSettings:VerySecretValue"];

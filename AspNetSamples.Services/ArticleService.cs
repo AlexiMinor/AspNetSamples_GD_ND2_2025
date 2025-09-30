@@ -121,5 +121,10 @@ namespace AspNetSamples.Services
             await WebScrapArticleTextAsync(token);
             _logger.LogInformation("Web scrapping completed");
         }
+
+        public async Task<int> GetArticlesCountAsync(CancellationToken httpContextRequestAborted)
+        {
+            return await _mediator.Send(new GetArticleCountQuery(), httpContextRequestAborted);
+        }
     }
 }

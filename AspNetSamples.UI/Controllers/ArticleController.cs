@@ -224,5 +224,14 @@ namespace AspNetSamples.UI.Controllers
 
             return RedirectToAction("Index");
         }
+
+        [HttpGet]
+        [Route("api/articles/count")]
+        public async Task<IActionResult> GetArticlesCount()
+        {
+            var count = await _articleService.GetArticlesCountAsync(HttpContext.RequestAborted);
+            return Json(new { Count = count });
+        }
     }
+
 }
