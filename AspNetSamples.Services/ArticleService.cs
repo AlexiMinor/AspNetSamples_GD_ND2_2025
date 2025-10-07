@@ -14,22 +14,37 @@ namespace AspNetSamples.Services
         private readonly IRssService _rssService;
         private readonly IWebParserService _webParserService;
         private readonly IMediator _mediator;
+        private readonly ICacheService _cacheService;
 
         public ArticleService(IWebParserService webParserService, 
             ILogger<ArticleService> logger, 
-            ISourceService sourceService, 
             IRssService rssService, 
-            IMediator mediator)
+            IMediator mediator, 
+            ICacheService cacheService)
         {
             _webParserService = webParserService;
             _logger = logger;
             _rssService = rssService;
             _mediator = mediator;
+            _cacheService = cacheService;
         }
 
         public async Task<ArticleDto?> GetArticleByIdAsync(Guid id, CancellationToken token = default)
         {
-          return await _mediator.Send(new GetArticleByIdQuery() { ArticleId = id }, token);
+            var articleFromCache = _cacheService.Get<ArticleDto?>($"article_{id}");
+            if (articleFromCache != null)
+            {
+                return articleFromCache;
+            }
+
+            var article = await _mediator.Send(new GetArticleByIdQuery() { ArticleId = id }, token);
+
+            if (article != null)
+            {
+                _cacheService.Set($"article_{id}", article, DateTimeOffset.UtcNow.AddHours(1));
+            }
+
+            return article;
         }
 
         public async Task<ArticleDto[]> GetArticlesByPageAsync(int currentPage, int pageSize,
