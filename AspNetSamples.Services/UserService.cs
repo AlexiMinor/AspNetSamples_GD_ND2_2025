@@ -67,6 +67,12 @@ public class UserService : IUserService
             : user;
     }
 
+    public async Task<UserDto?> TryToLoginUserByRefreshTokenAsync(Guid refreshToken)
+    {
+        var user = await _mediator.Send(new GetUserByRefreshTokenQuery() { RefreshToken = refreshToken });
+        return user ?? null;
+    }
+
     private static byte[] HashPassword(string password, string salt)
     {
         var passwordWithSalt = password + salt;

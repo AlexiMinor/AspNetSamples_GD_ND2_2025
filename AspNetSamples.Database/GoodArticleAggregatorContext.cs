@@ -9,8 +9,9 @@ namespace AspNetSamples.Database
         public DbSet<Role> Roles { get; set; }
         public DbSet<Source> Sources { get; set; }
         public DbSet<User> Users { get; set; }
-        
-        
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+
         public GoodArticleAggregatorContext (DbContextOptions<GoodArticleAggregatorContext> options)
             : base(options)
         {

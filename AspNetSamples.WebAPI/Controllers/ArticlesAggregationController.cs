@@ -15,7 +15,7 @@ namespace AspNetSamples.WebAPI.Controllers
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class ArticlesAggregationController : ControllerBase
     {
         private readonly IArticleService _articleService;
@@ -30,7 +30,8 @@ namespace AspNetSamples.WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> AggregateArticles()
         {
-            await _articleService.AggregateArticlesAsync(HttpContext.RequestAborted);
+            var x = HttpContext.User;
+            //await _articleService.AggregateArticlesAsync(HttpContext.RequestAborted);
             return Ok();
         }
     }

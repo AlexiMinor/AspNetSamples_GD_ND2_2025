@@ -6,4 +6,5 @@ public interface IUserService
 {
     public Task<UserDto> RegisterUserAsync(UserDto dto, CancellationToken token = default);
     public Task<UserDto?> TryToLoginUserAsync(string modelEmail, string modelPassword);
+    public Task<UserDto?> TryToLoginUserByRefreshTokenAsync(Guid refreshToken);
 }

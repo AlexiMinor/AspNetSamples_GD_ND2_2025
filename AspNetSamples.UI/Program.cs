@@ -87,7 +87,9 @@ namespace AspNetSamples.UI
                 cfg.RegisterServicesFromAssemblyContaining<AddArticlesCollectionCommandHandler>());
 
             //register services
-            builder.Services.AddScoped<IArticleService, ArticleService>();
+            builder.Services.AddScoped<IArticleService, ArticleService>(); 
+            builder.Services.AddScoped<ICacheService, CacheService>(); 
+            builder.Services.AddScoped<ITokenService, TokenService>(); 
             builder.Services.AddScoped<IArticleRateService, ArticleRateService>();
             builder.Services.AddScoped<IRssService, RssService>();
             builder.Services.AddScoped<ISourceService, SourceService>();

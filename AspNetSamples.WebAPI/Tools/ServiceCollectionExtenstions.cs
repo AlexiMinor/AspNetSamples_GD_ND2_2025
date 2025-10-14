@@ -4,9 +4,10 @@ using AspNetSamples.Mappers;
 using AspNetSamples.Services;
 using AspNetSamples.Services.Abstractions;
 using Hangfire;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Settings.Configuration;
 
@@ -28,6 +29,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISyndicationFeedReader, SyndicationFeedReader>();
         services.AddSingleton<ICacheService, CacheService>();
         services.AddSingleton<IMemoryCache, MemoryCache>();
+        services.AddScoped<ITokenService, TokenService>();
         
     }
 
@@ -39,6 +41,21 @@ public static class ServiceCollectionExtensions
             .ReadFrom.Configuration(configuration, options)
             .CreateLogger();
         services.AddSerilog(logger);
+    }
+
+    public static void AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                var corsOrigins = configuration.GetSection("AppSettings:CorsOrigins").Get<string[]>(); 
+                policy
+                    .WithOrigins(corsOrigins)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
     }
 
     public static void RegisterDb(this IServiceCollection services, IConfiguration configuration)
@@ -69,5 +86,26 @@ public static class ServiceCollectionExtensions
 
         services.AddHangfireServer();
 
+    }
+
+    public static void AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddAuthentication(opt =>
+        {
+            opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(opt =>
+        {
+            opt.TokenValidationParameters = new TokenValidationParameters()
+            {
+                ValidateAudience = true,
+                ValidateIssuer = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidAudience = configuration["Jwt:Audience"],
+                ValidIssuer = configuration["Jwt:Issuer"],
+                IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"])),
+            };
+        });
     }
 }

@@ -1,12 +1,8 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics;
-using AspNetSamples.Core.Dto;
+﻿using System.Diagnostics;
 using AspNetSamples.Mappers;
 using AspNetSamples.Models;
 using AspNetSamples.Services.Abstractions;
 using AspNetSamples.UI.Models;
-using Microsoft.AspNetCore.Antiforgery;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AspNetSamples.UI.Controllers
