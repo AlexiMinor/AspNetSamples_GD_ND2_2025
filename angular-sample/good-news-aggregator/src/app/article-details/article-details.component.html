@@ -1,0 +1,12 @@
+<div>
+  @if (article()) {
+    <div class="article-details">
+      <h2>{{ article()?.title }}</h2>
+      <div>{{ article()?.content }}</div>
+      <div>{{article()?.rate}}</div>
+      <div>{{article()?.sourceName}}</div>
+
+      <button type="button" (click)="goBack()">Go Back</button>
+    </div>
+  }
+</div>

@@ -1,0 +1,9 @@
+@if (article) {
+  <div class="article-preview">
+    <!-- [class.selected]="article === selectedArticle" -->
+    <h3>{{ article.title }} - {{ article.id }}</h3>
+    <p>{{ article.description }}</p>
+    <a [routerLink]="['/articles', article.id]">Read more</a>
+    <!-- <button type="button" (click)="selectArticle(article)">Read more</button> -->
+  </div>
+}

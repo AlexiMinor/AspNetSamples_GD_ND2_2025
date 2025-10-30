@@ -1,0 +1,18 @@
+a {
+  margin: 10px;
+}
+
+.links{
+  font-size: 24px;
+  display: flex;
+  flex-direction: row;
+    justify-content: flex-start;
+  align-items: center;
+}
+
+.user-info-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  flex: auto;
+}

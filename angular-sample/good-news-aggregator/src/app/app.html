@@ -1,0 +1,35 @@
+<main class="main">
+  <div class="content">
+<!--    <h1>{{ title }}</h1>-->
+    <div class="links">
+      <div class="link">
+        <a routerLink="/">Home</a>
+      </div>
+
+      <a routerLink="/articles">Read Articles</a>
+
+      <div class="user-info-container">
+      @if (userSignal()) {
+        <div class="user-info">
+          <span>Logged in as {{ userSignal()?.email }}</span>
+        </div>
+        <div class="link">
+          <a (click)="logout()">Logout</a>
+        </div>
+        @if (isAdmin()) {
+        <div class="link">
+          <a routerLink="/admin-panel">Admin Panel</a>
+        </div>
+        }
+      } @else {
+        <div class="link">
+          <a routerLink="/login">Login</a>
+        </div>
+      }
+      </div>
+    </div>
+    <router-outlet></router-outlet>
+  </div>
+</main>
+
+

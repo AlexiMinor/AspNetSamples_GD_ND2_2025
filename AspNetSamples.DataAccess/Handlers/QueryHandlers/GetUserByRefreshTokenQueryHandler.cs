@@ -24,9 +24,9 @@ public class GetUserByRefreshTokenQueryHandler : IRequestHandler<GetUserByRefres
             .AsNoTracking()
             .Include(us => us.User)
             .ThenInclude(us => us.Role)
-            .Where(token => !token.IsRevoked && !token.IsExpired)
+            .Where(token => !token.IsRevoked)
             .SingleOrDefaultAsync(token => token.Id.Equals(request.RefreshToken), cancellationToken);
 
-        return _userMapper.MapUserToUserDto(rt.User);
+        return rt is { IsExpired: false } ? _userMapper.MapUserToUserDto(rt.User) : null;
     }
 }

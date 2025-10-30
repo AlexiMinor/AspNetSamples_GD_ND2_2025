@@ -4,6 +4,7 @@ using AspNetSamples.Database;
 using AspNetSamples.Services.Abstractions;
 using AspNetSamples.WebAPI.Model;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -44,37 +45,42 @@ namespace AspNetSamples.WebAPI.Controllers
         /// <returns>
         /// An <see cref="IActionResult"/> containing a paginated list of articles, 
         /// including metadata such as total articles, total pages, and the current page.
-        /// </returns>
+        /// </returns>1
         [HttpGet]
-        public IActionResult GetArticles(Guid? sourceId, double? minRate, int currentPage = 1, int pageSize = 12)
+        [Authorize]
+        [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(List<ArticleDto>))]
+
+        public async Task<IActionResult> GetArticles(Guid? sourceId, double? minRate, int currentPage = 1, int pageSize = 12)
         {
             //move to query + mediator
-            var articles = _context.Articles.AsQueryable();
+            //var articles = _context.Articles.AsQueryable();
 
-            if (sourceId.HasValue)
-            {
-                articles = articles.Where(a => a.SourceId == sourceId.Value);
-            }
+            //if (sourceId.HasValue)
+            //{
+            //    articles = articles.Where(a => a.SourceId == sourceId.Value);
+            //}
 
-            if (minRate.HasValue)
-            {
-                articles = articles.Where(a => a.Rate >= minRate.Value);
-            }
+            //if (minRate.HasValue)
+            //{ 
+            //    articles = articles.Where(a => a.Rate >= minRate.Value);
+            //}
 
-            var totalArticles = articles.Count();
-            var totalPages = (int)Math.Ceiling(totalArticles / (double)pageSize);
+            ////var totalArticles = articles.Count();
+            ////var totalPages = (int)Math.Ceiling(totalArticles / (double)pageSize);
 
-            var pagedArticles = articles.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+            //var pagedArticles = articles.Skip((currentPage - 1) * pageSize).Take(pageSize).Select(article => ).ToList();
 
-            var response = new
-            {
-                TotalArticles = totalArticles,
-                TotalPages = totalPages,
-                CurrentPage = currentPage,
-                Articles = pagedArticles
-            };
+            //var response = new
+            //{
+            //    TotalArticles = totalArticles,
+            //    TotalPages = totalPages,
+            //    CurrentPage = currentPage,
+            //    Articles = pagedArticles
+            //};
 
-            return Ok(response);
+            var articles = await _articleService.GetArticlesByPageAsync(currentPage, pageSize);
+
+            return Ok(articles);
         }
 
 

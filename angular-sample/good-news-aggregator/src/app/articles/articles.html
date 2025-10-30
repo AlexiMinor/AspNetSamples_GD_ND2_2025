@@ -1,0 +1,31 @@
+@if(userSignal())
+{<h2>Articles</h2>
+  @for(article of articles(); track article.id) {
+
+    <app-article-preview [article]="article" (selectedArticleEvent)="selectArticle($event)"></app-article-preview>
+
+  }
+
+<hr/>
+
+@if (selectedArticle) {
+<div class="article-details">
+  <h2>{{ selectedArticle.title }}</h2>
+  <p>{{ selectedArticle.content }}</p>
+  <button type="button" (click)="closeArticle()">Close</button>
+</div>
+<!-- <hr/>
+
+<div>
+  <label for="title">Edit Title:
+  </label>
+
+  <input id="title" type="text" [(ngModel)]="selectedArticle.title" />
+
+</div> -->
+}
+}
+@else {
+  <h2>Please login</h2>
+  <a routerLink="/login">Login</a>
+}
