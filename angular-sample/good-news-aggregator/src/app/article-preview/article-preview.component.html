@@ -1,9 +1,25 @@
 @if (article) {
-  <div class="article-preview">
-    <!-- [class.selected]="article === selectedArticle" -->
-    <h3>{{ article.title }} - {{ article.id }}</h3>
-    <p>{{ article.description }}</p>
-    <a [routerLink]="['/articles', article.id]">Read more</a>
-    <!-- <button type="button" (click)="selectArticle(article)">Read more</button> -->
-  </div>
+  <mat-card class="article-card" appearance="raised">
+    <mat-card-header>
+<!--      <div mat-card-avatar class="example-header-image"></div>-->
+      <mat-card-title>{{article.title }}</mat-card-title>
+      <mat-card-subtitle>from {{ article.sourceName }}</mat-card-subtitle>
+    </mat-card-header>
+<!--    <img mat-card-image src="https://material.angular.dev/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu">-->
+    <mat-card-content>
+      <p>
+        {{
+          article.description
+        }}
+      </p>
+    </mat-card-content>
+    <mat-card-actions>
+      <a [routerLink]="['/articles', article.id]" matButton>Details</a>
+      <a href="{{article.originUrl}}" matButton>Read at source</a>
+    </mat-card-actions>
+  <mat-card-footer>
+    <mat-icon>star</mat-icon>
+    <span>{{article.rate}}</span>
+  </mat-card-footer>
+  </mat-card>
 }

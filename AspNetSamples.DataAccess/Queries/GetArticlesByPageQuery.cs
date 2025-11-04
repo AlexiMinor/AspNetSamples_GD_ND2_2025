@@ -3,7 +3,7 @@ using MediatR;
 
 namespace AspNetSamples.DataAccess.Queries;
 
-public class GetArticlesByPageQuery : IRequest<ArticleDto[]>
+public class GetArticlesByPageQuery : IRequest<PagedArticlesDto>
 {
     //nameof parameter for order by
     public string OrderBy { get; set; }

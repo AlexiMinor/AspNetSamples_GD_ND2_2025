@@ -10,13 +10,9 @@ export class AdminPanelComponent {
 
   constructor() { }
 
-
-
   goToHangfire(): void {
-
   }
 
   aggregateArticles(): void {
-
   }
 }

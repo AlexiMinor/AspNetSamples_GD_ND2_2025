@@ -1,3 +1,17 @@
 .selected {
   background-color: #e0f7fa;
 }
+.articles-list{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: start;
+  align-items: stretch;
+}
+
+.loading-spinner{
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 200px;
+}

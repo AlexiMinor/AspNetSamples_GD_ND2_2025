@@ -3,6 +3,7 @@ import {Article} from '../../models/article';
 import {ARTICLES_STORAGE} from '../../models/ARTICLES_STORAGE';
 import {Observable} from 'rxjs';
 import {ApiService} from '../api/api.service';
+import {PagedArticles} from '../../models/paged-articles';
 
 @Injectable({
   providedIn: 'root',
@@ -12,8 +13,8 @@ export class ArticlesService {
   constructor(private apiService: ApiService) {
   }
 
-  getArticles(): Observable<Article[] | null> {
-    return this.apiService.get<Article[]>('articles', { pageSize: 100})
+  getArticles(currentPage:number, pageSize:number): Observable<PagedArticles | null> {
+    return this.apiService.get<PagedArticles>('articles', { pageSize: pageSize, currentPage: currentPage})
   }
 
   getArticleById(id: string): Observable<Article | null> {

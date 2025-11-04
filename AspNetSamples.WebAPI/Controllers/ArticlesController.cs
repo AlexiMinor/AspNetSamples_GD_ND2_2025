@@ -48,7 +48,7 @@ namespace AspNetSamples.WebAPI.Controllers
         /// </returns>1
         [HttpGet]
         [Authorize]
-        [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(List<ArticleDto>))]
+        [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(PagedArticlesDto))]
 
         public async Task<IActionResult> GetArticles(Guid? sourceId, double? minRate, int currentPage = 1, int pageSize = 12)
         {
@@ -98,9 +98,6 @@ namespace AspNetSamples.WebAPI.Controllers
         {
             return Ok();
         }
-
-
-
 
         [HttpGet("{id}")]
         [ProducesResponseType(statusCode:StatusCodes.Status200OK, type:typeof(ArticleDto))]

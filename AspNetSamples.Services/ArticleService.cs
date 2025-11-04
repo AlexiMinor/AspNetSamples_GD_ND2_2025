@@ -47,7 +47,7 @@ namespace AspNetSamples.Services
             return article;
         }
 
-        public async Task<ArticleDto[]> GetArticlesByPageAsync(int currentPage, int pageSize,
+        public async Task<PagedArticlesDto> GetArticlesByPageAsync(int currentPage, int pageSize,
             CancellationToken cancellationToken = default)
         {
             return await _mediator.Send(new GetArticlesByPageQuery()

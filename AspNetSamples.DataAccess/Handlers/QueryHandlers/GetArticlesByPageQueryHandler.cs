@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AspNetSamples.DataAccess.Handlers.QueryHandlers;
 
-public class GetArticlesByPageQueryHandler : IRequestHandler<GetArticlesByPageQuery, ArticleDto[]>
+public class GetArticlesByPageQueryHandler : IRequestHandler<GetArticlesByPageQuery, PagedArticlesDto>
 {
     private readonly GoodArticleAggregatorContext _context;
     private readonly ArticleMapper _articleMapper;
@@ -18,16 +18,27 @@ public class GetArticlesByPageQueryHandler : IRequestHandler<GetArticlesByPageQu
         _articleMapper = articleMapper;
     }
 
-    public async Task<ArticleDto[]> Handle(GetArticlesByPageQuery request, CancellationToken cancellationToken)
+    public async Task<PagedArticlesDto> Handle(GetArticlesByPageQuery request, CancellationToken cancellationToken)
     {
-        return await _context.Articles
+        var articles = await _context.Articles
             .AsNoTracking()
-            .Where(article => !string.IsNullOrWhiteSpace(article.Description))
+            .Where(article => !string.IsNullOrWhiteSpace(article.Description) && 
+                              article.Rate.HasValue)
             .Include(article => article.Source)
             .OrderBy(article => EF.Property<object>(article, request.OrderBy)) // Dynamic order by
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .Select(article => _articleMapper.MapArticleToArticleDto(article))
             .ToArrayAsync(cancellationToken);
+        var totalArticles = await _context.Articles.AsNoTracking()
+            .Where(article => !string.IsNullOrWhiteSpace(article.Description) &&
+                              article.Rate.HasValue)
+            .CountAsync(cancellationToken: cancellationToken);
+
+        return new PagedArticlesDto()
+        {
+            Articles = articles,
+            TotalArticles = totalArticles,
+        };
     }
 }
